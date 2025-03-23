@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Transactions History
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="text-center"><a href="{{ url_for('history', sort_by='symbol') }}">Symbol</a></th>
+                <th class="text-center"><a href="{{ url_for('history', sort_by='shares') }}">Shares</a></th>
+                <th class="text-center"><a href="{{ url_for('history', sort_by='price') }}">Price</a></th>
+                <th class="text-center"><a href="{{ url_for('history', sort_by='type') }}">Transaction Type</a></th>
+                <th class="text-center"><a href="{{ url_for('history', sort_by='timestamp') }}">Transaction Time</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in transactions %}
+                <tr>
+                    <td class="text-center">{{ item.symbol }}</td>
+                    <td class="text-center">{{ item.shares }}</td>
+                    <td class="text-center">{{ item.price }}</td>
+                    <td class="text-center"><b>{{ item.type }}</b></td>
+                    <td class="text-center">{{ item.timestamp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

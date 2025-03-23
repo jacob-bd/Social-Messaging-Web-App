@@ -1,0 +1,224 @@
+import os
+
+from cs50 import SQL
+from flask import Flask, flash, get_flashed_messages, redirect, render_template, request, session, jsonify
+from flask_session import Session
+from numpy import full
+#from sphinx import ret
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from helpers import apology, login_required
+
+# Configure application
+app = Flask(__name__)
+
+# Configure session to use filesystem (instead of signed cookies)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
+# Configure CS50 Library to use SQLite database
+db = SQL("sqlite:///messaging.db")
+
+
+@app.after_request
+def after_request(response):
+    """Ensure responses aren't cached"""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """Register user"""
+    if request.method == "POST":
+        username = request.form.get("username")
+        fullname = request.form.get("fullname")
+        country = request.form.get("country")
+        password = request.form.get("password")
+        passwordconf = request.form.get("confirmation")
+        if not username:  # check of no username entered in form
+            return apology("Please provide Username", 400)
+        if not password:  # check if no password provided
+            return apology("Please provide password", 400)
+        if not fullname:  # check if no fullname provided
+            return apology("Please provide fullname", 400)
+        if not country:  # check if no country provided
+            return apology("Please provide country", 400)
+        if not passwordconf:  # check if password confirm provided
+            return apology("Please Confirm password", 400)
+        if password != passwordconf:  # check if password matches confirmation
+            return apology("Passwords must match", 400)
+        try:  # Attempt to insert user
+            # inset username with hashed password
+            db.execute("INSERT INTO users (username, hash, full_name, country) VALUES (?,?,?,?)",
+                       username, generate_password_hash(password), fullname, country)
+            # Retrieve the user_id after inserting the user
+            user_id = db.execute("SELECT id FROM users WHERE username = ?", username)[0]["id"]
+            session["user_id"] = user_id
+            flash("Registered Successfully!")  # Store the message in the reg session
+            return redirect("/")  # if success, redirect to login
+        except ValueError:  # If SQL returns Error, return apology
+            return apology("Sorry, user already exists, please try again", 400)
+    return render_template("register.html")
+
+@app.route("/")
+@login_required
+def index():
+    """Show portfolio of stocks"""
+    user_id = session["user_id"]  # User ID for SQL query
+    messages = get_flashed_messages(with_categories=False)  # flash messages for actions
+    return render_template("index.html")
+
+
+@app.route("/buy", methods=["GET", "POST"])
+@login_required
+def buy():
+    """Buy shares of stock"""
+    if request.method == "POST":
+        symbol = request.form.get("symbol").upper()
+        if not symbol:
+            return apology("Please provide a stock symbol", 400)
+        shares = request.form.get("shares")
+        if not shares:
+            return apology("Please provide amount of shares to buy", 400)
+        try:
+            shares = int(shares)
+            if shares <= 0 :
+                return apology("Please provide a positive number", 400)
+        except ValueError:
+                return apology("Please porvide a valid number of shares", 400)
+        stock_info = lookup(symbol)
+        if not stock_info:
+            return apology("Invalid Stock Symbol", 400)
+
+        user_id = session["user_id"]  # User ID for SQL query
+        messages = get_flashed_messages(with_categories=False)  # flash messages for actions
+        # Step 0 - confirm sufficnet funds
+        total_cost = int(shares) * stock_info["price"]
+        # Step 1 - retrive current user cash
+        current_cash = db.execute("SELECT cash FROM users WHERE id=?", user_id)
+        cash = current_cash[0]["cash"]
+        if cash < total_cost:  # return errro if no funds
+            return apology("Sorry, Insufficient funds", 400)
+        # Step 2 - insert BUY transaction to transactions table
+        db.execute("INSERT INTO transactions (user_id, symbol, shares, price, type) VALUES (?, ?, ?, ?, 'buy')",
+                   user_id, symbol, shares, stock_info["price"])
+        # step 3 - update cash post purchase
+        db.execute("UPDATE users SET cash = ? - (? * ?) WHERE id = ? ",
+                   cash, shares, stock_info["price"], user_id)
+        flash("Stocks Purchased Successfully!")
+        return redirect("/")
+    return render_template("buy.html")
+
+
+@app.route("/history")
+@login_required
+def history():
+    """Show history of transactions"""
+    # Collect transaction data for user
+    user_id = session["user_id"]  # User ID for SQL query
+    sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
+    transactions = db.execute(
+        f"SELECT symbol, shares, price, type, timestamp FROM transactions WHERE user_id = ? ORDER BY {sort_by} DESC", user_id)
+    return render_template("history.html", transactions=transactions)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Log user in"""
+
+    # Forget any user_id
+    session.clear()
+
+    # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 403)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 403)
+
+        # Query database for username
+        rows = db.execute(
+            "SELECT * FROM users WHERE username = ?", request.form.get("username")
+        )
+
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(
+            rows[0]["hash"], request.form.get("password")
+        ):
+            return apology("invalid username and/or password", 403)
+
+        # Remember which user has logged in
+        session["user_id"] = rows[0]["id"]
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """Log user out"""
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
+
+
+@app.route("/search", methods=["GET", "POST"])
+@login_required
+def search():
+    """Search for friends"""
+    if request.method == "POST":
+        friend_name = request.form.get("friend")
+        if not friend_name:
+            return apology("Please provide a friend name", 400)
+        # Query database for friend name
+        friends = db.execute("SELECT id, full_name, country FROM users WHERE full_name LIKE ?", "%" + friend_name + "%")
+        if len(friends) < 1:
+            return apology("Friend not found", 400)
+        return render_template("search.html", friends=friends)
+    return render_template("search.html")
+
+
+@app.route("/request", methods=["GET", "POST"])
+@login_required
+def requests():
+    requester_id = session["user_id"]  # User ID for SQL query
+    
+    """send friend request"""
+    if request.method == "POST":
+        addressee_id = request.form.get("friend_id")
+        if not addressee_id:
+            return apology("Please provide a friend name", 400)
+        addressee_id = int(addressee_id) # convert str to int for DB insert
+        if addressee_id == requester_id: # prevent self friending
+                  return apology("You cannot friend yourself, silly 🤣", 400)
+        
+        # check if request already exists
+        existing = db.execute(
+            "SELECT * FROM friends WHERE requester_id = ? AND addressee_id = ?",
+            requester_id, addressee_id)
+        if existing:
+            return apology("Friend request already sent or you’re already friends", 400)
+        
+        #insert friend request into DB
+        db.execute(
+            "INSERT INTO friends (requester_id, addressee_id, status) VALUES (?, ?, ?)",
+            requester_id, addressee_id, "pending")
+        
+        flash("Friend request sent!")
+        return redirect("/")
+    else:
+        return render_template("index.html")
+        

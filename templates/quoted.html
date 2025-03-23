@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Stock Quoting Results Page
+{% endblock %}
+
+{% block main %}
+    <h2>Stock Quote for {{ stock_info.symbol }}</h2>
+
+    <p><b>Company Name</b>: {{ stock_info.name }}</p>
+    <p><b>Stock Price</b>: {{ stock_info.price }}</p>
+    <a href="/quote" class="btn btn-primary">Get Another Quote</a>
+{% endblock %}
