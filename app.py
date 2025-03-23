@@ -66,63 +66,19 @@ def register():
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
+    """Index page"""
     user_id = session["user_id"]  # User ID for SQL query
     messages = get_flashed_messages(with_categories=False)  # flash messages for actions
     return render_template("index.html")
 
 
-@app.route("/buy", methods=["GET", "POST"])
+@app.route("/friends", methods=["GET", "POST"])
 @login_required
 def buy():
     """Buy shares of stock"""
     if request.method == "POST":
-        symbol = request.form.get("symbol").upper()
-        if not symbol:
-            return apology("Please provide a stock symbol", 400)
-        shares = request.form.get("shares")
-        if not shares:
-            return apology("Please provide amount of shares to buy", 400)
-        try:
-            shares = int(shares)
-            if shares <= 0 :
-                return apology("Please provide a positive number", 400)
-        except ValueError:
-                return apology("Please porvide a valid number of shares", 400)
-        stock_info = lookup(symbol)
-        if not stock_info:
-            return apology("Invalid Stock Symbol", 400)
-
-        user_id = session["user_id"]  # User ID for SQL query
-        messages = get_flashed_messages(with_categories=False)  # flash messages for actions
-        # Step 0 - confirm sufficnet funds
-        total_cost = int(shares) * stock_info["price"]
-        # Step 1 - retrive current user cash
-        current_cash = db.execute("SELECT cash FROM users WHERE id=?", user_id)
-        cash = current_cash[0]["cash"]
-        if cash < total_cost:  # return errro if no funds
-            return apology("Sorry, Insufficient funds", 400)
-        # Step 2 - insert BUY transaction to transactions table
-        db.execute("INSERT INTO transactions (user_id, symbol, shares, price, type) VALUES (?, ?, ?, ?, 'buy')",
-                   user_id, symbol, shares, stock_info["price"])
-        # step 3 - update cash post purchase
-        db.execute("UPDATE users SET cash = ? - (? * ?) WHERE id = ? ",
-                   cash, shares, stock_info["price"], user_id)
-        flash("Stocks Purchased Successfully!")
         return redirect("/")
-    return render_template("buy.html")
-
-
-@app.route("/history")
-@login_required
-def history():
-    """Show history of transactions"""
-    # Collect transaction data for user
-    user_id = session["user_id"]  # User ID for SQL query
-    sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
-    transactions = db.execute(
-        f"SELECT symbol, shares, price, type, timestamp FROM transactions WHERE user_id = ? ORDER BY {sort_by} DESC", user_id)
-    return render_template("history.html", transactions=transactions)
+    return render_template("friends.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -162,17 +118,6 @@ def login():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
-
-
-@app.route("/logout")
-def logout():
-    """Log user out"""
-
-    # Forget any user_id
-    session.clear()
-
-    # Redirect user to login form
-    return redirect("/")
 
 
 @app.route("/search", methods=["GET", "POST"])
@@ -221,4 +166,47 @@ def requests():
         return redirect("/")
     else:
         return render_template("index.html")
+    
+@app.route("/requests")
+@login_required
+def check_requests():
+    addressee_id = session["user_id"]  # The logged-in user receiving requests
+    requests = db.execute(
+        "SELECT u.username, u.full_name, f.requester_id, f.request_date "
+        "FROM friends f JOIN users u ON u.id = f.requester_id "
+        "WHERE f.addressee_id = ? AND f.status = 'pending'",
+        addressee_id
+    )
+    return render_template("requests.html", requests=requests)
+
+@app.route("/accept", methods=["POST"])
+@login_required
+def accept():
+    user_id = session["user_id"]
+    requester_id = request.form.get("requester_id")
+    db.execute(
+        "UPDATE friends SET status = 'accepted' WHERE requester_id = ? AND addressee_id = ?", requester_id, user_id)
+    flash("Friend request accepted!")
+    return redirect("/requests")
+
         
+@app.route("/logout")
+def logout():
+    """Log user out"""
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
+
+@app.route("/history")
+@login_required
+def history():
+    """Show history of transactions"""
+    # Collect transaction data for user
+    user_id = session["user_id"]  # User ID for SQL query
+    sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
+    transactions = db.execute(
+        f"SELECT symbol, shares, price, type, timestamp FROM transactions WHERE user_id = ? ORDER BY {sort_by} DESC", user_id)
+    return render_template("history.html", transactions=transactions)
