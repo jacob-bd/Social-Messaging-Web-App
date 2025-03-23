@@ -1,0 +1,9 @@
+SELECT u.id, u.full_name, u.country
+FROM friends f
+JOIN users u ON u.id = f.addressee_id
+WHERE f.requester_id = 1 AND f.status = 'accepted'
+UNION
+SELECT u.id, u.full_name, u.country
+FROM friends f
+JOIN users u ON u.id = f.requester_id
+WHERE f.addressee_id = 1 AND f.status = 'accepted';

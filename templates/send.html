@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Apology
+{% endblock %}
+
+{% block main %}
+<div>
+    <h1>Send a message to {{ friend_info[0]["full_name"] }}</h1>
+</div>
+<br>
+<form action="/send_message" method="post">
+<div class="input-group mb-3">
+    <input type="text" class="form-control" name="message" placeholder="Type your message here" aria-label="Recipient's username" aria-describedby="button-addon2">
+    <input type="hidden" name="recipient_id" value="{{ friend_info[0]['id'] }}"">
+    <button class="btn btn-success" type="submit">Send Message</button>
+  </div>
+</form>
+{% endblock %}

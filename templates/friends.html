@@ -1,17 +1,22 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Buy Stocks
+    Friends
 {% endblock %}
 
 {% block main %}
-    <form action="/buy" method="post">
-        <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="symbol" placeholder="Stock Symbol" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="shares" placeholder="Shares" type="number">
-        </div>
-        <button class="btn btn-primary" type="submit">Buy</button>
+{% for friend in friends %}
+<div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">{{friend.full_name}}</h5>
+      <p class="card-text">{{friend.full_name}} is your friend from {{friend.country}}</p>
+      <form action="/send" method="post">
+      <input type="hidden" name="friend_id" value="{{ friend.id }}">
+      <button class="btn btn-primary" type="submit">Send a Message</button>
+    </div>
     </form>
+  </div>
+  <br>
+{% endfor %}
+
 {% endblock %}

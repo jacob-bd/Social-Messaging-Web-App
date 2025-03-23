@@ -69,16 +69,19 @@ def index():
     """Index page"""
     user_id = session["user_id"]  # User ID for SQL query
     messages = get_flashed_messages(with_categories=False)  # flash messages for actions
-    return render_template("index.html")
+    greet  = db.execute("SELECT full_name FROM users WHERE id = ?", user_id)[0]["full_name"]
+    return render_template("index.html", greet=greet)
 
 
 @app.route("/friends", methods=["GET", "POST"])
 @login_required
 def buy():
-    """Buy shares of stock"""
+    """Show friends"""
+    user_id = session["user_id"]  # User ID for SQL query
+    friends = db.execute("SELECT u.id, u.full_name, u.country FROM friends f JOIN users u ON u.id = f.addressee_id WHERE f.requester_id = ? AND f.status = 'accepted' UNION SELECT u.id, u.full_name, u.country FROM friends f JOIN users u ON u.id = f.requester_id WHERE f.addressee_id = ? AND f.status = 'accepted';", user_id, user_id)
     if request.method == "POST":
-        return redirect("/")
-    return render_template("friends.html")
+        return render_template("send.html")
+    return render_template("friends.html", friends=friends)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -189,7 +192,43 @@ def accept():
     flash("Friend request accepted!")
     return redirect("/requests")
 
-        
+@app.route("/reject", methods=["POST"])
+@login_required
+def reject():
+    user_id = session["user_id"]
+    requester_id = request.form.get("requester_id")
+    db.execute(
+        "UPDATE friends SET status = 'rejected' WHERE requester_id = ? AND addressee_id = ?", requester_id, user_id)
+    flash("Friend request rejected!")
+    return redirect("/requests")
+
+@app.route("/send", methods=["GET", "POST"])
+@login_required
+def send():
+    friend_id = request.form.get("friend_id")
+    if request.method == "POST":
+        friend_info = db.execute("SELECT * FROM users WHERE id = ?", friend_id)
+        if not friend_info:
+            flash("Invalid friend ID!")
+        return render_template("send.html", friend_info=friend_info)
+    else:
+        return render_template("send.html")
+    
+
+@app.route("/send_message", methods=["POST"])
+@login_required
+def send_message():
+    user_id = session["user_id"]
+    recipient_id = request.form.get("recipient_id")
+    message = request.form.get("message")
+    print("recipient_id: ", recipient_id)
+    print("message: ", message)
+    print("user_id: ", user_id)
+    db.execute("INSERT INTO messages (sender_id, receiver_id, content, status) VALUES (?, ?, ?, 'sent')", 
+               user_id, recipient_id, message)
+    flash("Message sent!")
+    return redirect("/")
+
 @app.route("/logout")
 def logout():
     """Log user out"""
@@ -203,10 +242,7 @@ def logout():
 @app.route("/history")
 @login_required
 def history():
-    """Show history of transactions"""
+    """Show messages sent and received by user"""
     # Collect transaction data for user
     user_id = session["user_id"]  # User ID for SQL query
-    sort_by = request.args.get('sort_by', 'timestamp')  # Default sort by timestamp
-    transactions = db.execute(
-        f"SELECT symbol, shares, price, type, timestamp FROM transactions WHERE user_id = ? ORDER BY {sort_by} DESC", user_id)
-    return render_template("history.html", transactions=transactions)
+    return render_template("history.html")
