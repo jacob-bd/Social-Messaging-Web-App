@@ -40,5 +40,5 @@ __pycache__/
 *.sqlite3
 
 # ignore folders
-flask_session/
-TEST_FOLDER/
+/flask_session/
+/TEST_FOLDER/
