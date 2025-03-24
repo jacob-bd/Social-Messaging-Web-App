@@ -1,22 +1,39 @@
 {% extends "layout.html" %}
 {% block title %}Friend Requests{% endblock %}
 {% block main %}
-    <h3>Pending Friend Requests</h3>
-    {% for request in requests %}
-        <div class="row mb-2 align-items-center">
-            <div class="col-sm-9">
-                <p> <b>{{ request.full_name }}</b>  username ({{ request.username }}) sent you a request on <b>{{ request.request_date }}</b></p>
-            </div>
-            <div class="col-sm-3">
-                <form action="/accept" method="post" class="d-inline">
+    <h3 style="color: white;">Pending Friend Requests</h3>
+    <table class="table caption-top">
+        <caption><strong style="color: white;">Incoming Messages</strong></caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">From</th>
+            <th scope="col">Country</th>
+            <th scope="col">Date Received</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in requests %}
+          <tr>
+            <th scope="row">{{ loop.index }}</th>
+            <td>{{ request.full_name }}</td>
+            <td>{{ request.country }}</td>
+            <td>{{ request.request_date }}</td>
+            <td>
+              <div class="btn-group">
+                <form action="/accept" method="post" style="display:inline;">
                     <input type="hidden" name="requester_id" value="{{ request.requester_id }}">
                     <button class="btn btn-success btn-sm" type="submit">Accept</button>
                 </form>
-                <form action="/reject" method="post" class="d-inline">
+                <form action="/reject" method="post" style="display:inline;">
                     <input type="hidden" name="requester_id" value="{{ request.requester_id }}">
                     <button class="btn btn-danger btn-sm" type="submit">Reject</button>
                 </form>
-            </div>
-        </div>
-    {% endfor %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 {% endblock %}

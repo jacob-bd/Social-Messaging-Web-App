@@ -39,18 +39,18 @@ def register():
         country = request.form.get("country")
         password = request.form.get("password")
         passwordconf = request.form.get("confirmation")
+        if not fullname:  # check if no fullname provided
+            return apology("Please provide Full Name", 400)
         if not username:  # check of no username entered in form
-            return apology("Please provide Username", 400)
+            return apology("Please provide username", 400)
         if not password:  # check if no password provided
             return apology("Please provide password", 400)
-        if not fullname:  # check if no fullname provided
-            return apology("Please provide fullname", 400)
-        if not country:  # check if no country provided
-            return apology("Please provide country", 400)
         if not passwordconf:  # check if password confirm provided
             return apology("Please Confirm password", 400)
         if password != passwordconf:  # check if password matches confirmation
             return apology("Passwords must match", 400)
+        if not country:  # check if no country provided
+            return apology("Please provide country", 400)
         try:  # Attempt to insert user
             # inset username with hashed password
             db.execute("INSERT INTO users (username, hash, full_name, country) VALUES (?,?,?,?)",
@@ -71,7 +71,9 @@ def index():
     user_id = session["user_id"]  # User ID for SQL query
     messages = get_flashed_messages(with_categories=False)  # flash messages for actions
     greet  = db.execute("SELECT full_name FROM users WHERE id = ?", user_id)[0]["full_name"]
-    return render_template("index.html", greet=greet)
+    messages = db.execute("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND status = 'sent'", user_id)[0]["COUNT(*)"]
+    print("MESSAGES COUNT:", messages)
+    return render_template("index.html", greet=greet, messages=messages)
 
 
 @app.route("/friends", methods=["GET", "POST"])
@@ -178,7 +180,7 @@ def check_requests():
     """Check for friend requests"""
     addressee_id = session["user_id"]  # The logged-in user receiving requests
     requests = db.execute(
-        "SELECT u.username, u.full_name, f.requester_id, f.request_date "
+        "SELECT u.username, u.country, u.full_name, f.requester_id, f.request_date "
         "FROM friends f JOIN users u ON u.id = f.requester_id "
         "WHERE f.addressee_id = ? AND f.status = 'pending'",
         addressee_id
