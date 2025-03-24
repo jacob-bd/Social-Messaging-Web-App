@@ -18,4 +18,4 @@ ORDER BY m.timestamp DESC;
 
 [{'id': 1, 'content': 'This is my first message, hello world!', 'timestamp': '2025-03-23 21:41:52', 'full_name': 'Jacob BD', 'is_read': 0}]
 
-Test
+Test2
