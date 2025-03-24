@@ -122,7 +122,7 @@ def login():
     else:
         return render_template("login.html")
 
-
+# Search for friends by name
 @app.route("/search", methods=["GET", "POST"])
 @login_required
 def search():
@@ -132,13 +132,13 @@ def search():
         if not friend_name:
             return apology("Please provide a friend name", 400)
         # Query database for friend name
-        friends = db.execute("SELECT id, full_name, country FROM users WHERE full_name LIKE ?", "%" + friend_name + "%")
+        friends = db.execute("SELECT id, username, full_name, country FROM users WHERE full_name LIKE ?", "%" + friend_name + "%")
         if len(friends) < 1:
             return apology("Friend not found", 400)
         return render_template("search.html", friends=friends)
     return render_template("search.html")
 
-
+# Allow sending friend requests from Friends page
 @app.route("/request", methods=["GET", "POST"])
 @login_required
 def requests():
@@ -169,10 +169,12 @@ def requests():
         return redirect("/")
     else:
         return render_template("index.html")
-    
+
+# Check friend requests    
 @app.route("/requests")
 @login_required
 def check_requests():
+    """Check for friend requests"""
     addressee_id = session["user_id"]  # The logged-in user receiving requests
     requests = db.execute(
         "SELECT u.username, u.full_name, f.requester_id, f.request_date "
@@ -182,6 +184,7 @@ def check_requests():
     )
     return render_template("requests.html", requests=requests)
 
+# Accept a friend request
 @app.route("/accept", methods=["POST"])
 @login_required
 def accept():
@@ -192,6 +195,7 @@ def accept():
     flash("Friend request accepted!")
     return redirect("/requests")
 
+# Reject a friend request
 @app.route("/reject", methods=["POST"])
 @login_required
 def reject():
@@ -202,6 +206,7 @@ def reject():
     flash("Friend request rejected!")
     return redirect("/requests")
 
+## A page for sending messages to friends
 @app.route("/send", methods=["GET", "POST"])
 @login_required
 def send():
@@ -213,21 +218,43 @@ def send():
         return render_template("send.html", friend_info=friend_info)
     else:
         return render_template("send.html")
-    
 
+
+## A route for delete message action
+# @app.route("/delete", methods=["POST"])
+# @login_required
+# def delete_message():
+#     friend_id = request.form.get("friend_id")
+#     friend_info = db.execute("SELECT * FROM users WHERE id = ?", friend_id)
+#         if not friend_info:
+#             flash("Invalid friend ID!")
+#         return render_template("reply.html", friend_info=friend_info)
+#     else:
+#         return render_template("reply.html")
+    
+    
+# Send message to a friend 
 @app.route("/send_message", methods=["POST"])
 @login_required
 def send_message():
     user_id = session["user_id"]
     recipient_id = request.form.get("recipient_id")
     message = request.form.get("message")
-    print("recipient_id: ", recipient_id)
-    print("message: ", message)
-    print("user_id: ", user_id)
     db.execute("INSERT INTO messages (sender_id, receiver_id, content, status) VALUES (?, ?, ?, 'sent')", 
                user_id, recipient_id, message)
     flash("Message sent!")
-    return redirect("/")
+    return redirect("/inbox")
+
+# Inbox page
+@app.route("/inbox", methods=["GET", "POST"])
+@login_required
+def inbox():
+    """ Show messages sent and received by user """
+    # Collect transaction data for user
+    user_id = session["user_id"]  # User ID for SQL query
+    in_messages = db.execute("SELECT m.id, m.sender_id, m.content, m.timestamp, u.full_name, m.is_read FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.receiver_id = ? AND m.status = 'sent' ORDER BY m.timestamp DESC;", user_id)
+    out_messages = db.execute("SELECT m.id, m.content, m.timestamp, u.full_name, m.is_read FROM messages m JOIN users u ON u.id = m.receiver_id WHERE m.sender_id = ? AND m.status = 'sent' ORDER BY m.timestamp DESC;", user_id)
+    return render_template("inbox.html", in_messages=in_messages, out_messages=out_messages)
 
 @app.route("/logout")
 def logout():

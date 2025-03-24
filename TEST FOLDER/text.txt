@@ -7,3 +7,13 @@ SELECT u.id, u.full_name, u.country
 FROM friends f
 JOIN users u ON u.id = f.requester_id
 WHERE f.addressee_id = 1 AND f.status = 'accepted';
+
+## COLLECT INCOMING MESSAGES:
+
+SELECT m.id, m.content, m.timestamp, u.full_name, m.is_read
+FROM messages m
+JOIN users u ON u.id = m.sender_id
+WHERE m.receiver_id = 5 AND m.status = 'sent'
+ORDER BY m.timestamp DESC;
+
+[{'id': 1, 'content': 'This is my first message, hello world!', 'timestamp': '2025-03-23 21:41:52', 'full_name': 'Jacob BD', 'is_read': 0}]

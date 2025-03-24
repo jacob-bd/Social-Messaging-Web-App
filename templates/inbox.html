@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Stock Quoting Results Page
+{% endblock %}
+
+{% block main %}
+<table class="table caption-top">
+    <caption><strong style="color: white;">Incoming Messages</strong></caption>
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">From</th>
+        <th scope="col">Date Received</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for in_message in in_messages %}
+      <tr>
+        <th scope="row">{{ loop.index }}</th>
+        <td>{{ in_message.full_name }}</td>
+        <td>{{ in_message.timestamp }}</td>
+        <td>
+          <div class="btn-group">
+            <form action="/read" method="post" style="display:inline;">
+                <input type="hidden" name="message_id" value="{{ in_message.id }}">
+                <button type="button" class="btn btn-secodary btn-primary" data-bs-toggle="popover" data-bs-placement="left" data-bs-title="Message Content" data-bs-content="{{ in_message.content }}">Read Message</button>
+              </form>
+            <form action="/send" method="post" style="display:inline;">
+              <input type="hidden" name="friend_id" value="{{ in_message.sender_id }}">
+              <button class="btn btn-success" type="submit">Reply</button>
+            </form>
+            <form action="/delete" method="post" style="display:inline;">
+              <input type="hidden" name="message_id" value="{{ in_message.id }}">
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Second Table for Outgoing Messages -->
+
+  <table class="table caption-top">
+    <caption><strong style="color: white;">Outgoing Messages</strong></caption>
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">To</th>
+        <th scope="col">Date Sent</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for out_message in out_messages %}
+      <tr>
+        <th scope="row">{{ loop.index }}</th>
+        <td>{{ out_message.full_name }}</td>
+        <td>{{ out_message.timestamp }}</td>
+        <td>
+          <div class="btn-group">
+            <form action="/read" method="post" style="display:inline;">
+                <input type="hidden" name="message_id" value="{{ out_message.id }}">
+                <button type="button" class="btn btn-secodary btn-primary" data-bs-toggle="popover" data-bs-placement="left" data-bs-title="Message Content" data-bs-content="{{ out_message.content }}">Read Message</button>
+              </form>
+            <form action="/delete" method="post" style="display:inline;">
+              <input type="hidden" name="message_id" value="{{ out_message.id }}">
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+      <!-- Bootstrap JS and Popper.js -->
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+      <!-- Initialize Popover -->
+      <script>
+          $(document).ready(function(){
+              $('[data-bs-toggle="popover"]').popover();
+          });
+      </script>
+
+{% endblock %}
