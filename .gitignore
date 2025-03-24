@@ -1,0 +1,44 @@
+# Ignore all .env files
+*.env
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore log files
+*.log
+
+# Ignore macOS files
+.DS_Store
+
+# Ignore build files
+/dist/
+/build/
+
+# Ignore virtual environment files
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ignore folders
+flask_session/
+TEST_FOLDER/
