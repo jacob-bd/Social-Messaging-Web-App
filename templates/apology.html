@@ -5,7 +5,17 @@
 {% endblock %}
 
 {% block main %}
-    <!-- https://memegen.link/ -->
-    <!-- https://knowyourmeme.com/memes/grumpy-cat -->
-    <img alt="{{ top }}" class="border img-fluid" src="https://api.memegen.link/images/custom/{{ top | urlencode }}/{{ bottom | urlencode }}.jpg?background=https://i.imgur.com/CsCgN7Ll.png&width=400" title="{{ top }}">
+    <div class="container">
+        <div class="card mx-auto" style="max-width: 500px; background-color: #f8f9fa; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="card-header bg-danger text-white text-center">
+                <h3>Error {{ top }}</h3>
+            </div>
+            <div class="card-body text-center">
+                <img alt="Apology" class="img-fluid mb-3" src="/static/local_apology_image.png" style="max-width: 100%; border-radius: 5px;">
+                <h4 class="card-title text-danger">Oops!</h4>
+                <h3 class="card-text">{{ bottom }}</h3>
+                <a href="/" class="btn btn-primary mt-3">Return to Home</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}

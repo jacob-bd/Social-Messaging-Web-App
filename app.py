@@ -1,4 +1,5 @@
 import os
+import requests
 
 from cs50 import SQL
 from flask import Flask, flash, get_flashed_messages, redirect, render_template, request, session, jsonify
@@ -166,7 +167,7 @@ def requests():
             requester_id, addressee_id, "pending")
         
         flash("Friend request sent!")
-        return redirect("/")
+        return redirect("/search")
     else:
         return render_template("index.html")
 
@@ -220,17 +221,16 @@ def send():
         return render_template("send.html")
 
 
-## A route for delete message action
-# @app.route("/delete", methods=["POST"])
-# @login_required
-# def delete_message():
-#     friend_id = request.form.get("friend_id")
-#     friend_info = db.execute("SELECT * FROM users WHERE id = ?", friend_id)
-#         if not friend_info:
-#             flash("Invalid friend ID!")
-#         return render_template("reply.html", friend_info=friend_info)
-#     else:
-#         return render_template("reply.html")
+# A route for delete message action
+@app.route("/delete", methods=["POST"])
+@login_required
+def delete_message():
+    message_id = request.form.get("message_id")
+    print("MESSAGEID:",message_id)
+    # Set Message status to trash
+    db.execute("UPDATE messages SET status = 'trash'  WHERE id = ?", message_id)
+    flash("Message deleted!")
+    return redirect("/inbox")
     
     
 # Send message to a friend 
