@@ -71,9 +71,9 @@ def index():
     user_id = session["user_id"]  # User ID for SQL query
     messages = get_flashed_messages(with_categories=False)  # flash messages for actions
     greet  = db.execute("SELECT full_name FROM users WHERE id = ?", user_id)[0]["full_name"]
-    messages = db.execute("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND status = 'sent'", user_id)[0]["COUNT(*)"]
-    print("MESSAGES COUNT:", messages)
-    return render_template("index.html", greet=greet, messages=messages)
+    in_messages = db.execute("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND status = 'sent'", user_id)[0]["COUNT(*)"]
+    pending_requests = db.execute("SELECT COUNT(*) FROM friends WHERE addressee_id = ? AND status = 'pending'", user_id)[0]["COUNT(*)"]
+    return render_template("index.html", greet=greet, in_messages=in_messages, pending_requests=pending_requests)
 
 
 @app.route("/friends", methods=["GET", "POST"])
@@ -169,7 +169,7 @@ def requests():
             requester_id, addressee_id, "pending")
         
         flash("Friend request sent!")
-        return redirect("/search")
+        return redirect("/requests")
     else:
         return render_template("index.html")
 
@@ -179,13 +179,9 @@ def requests():
 def check_requests():
     """Check for friend requests"""
     addressee_id = session["user_id"]  # The logged-in user receiving requests
-    requests = db.execute(
-        "SELECT u.username, u.country, u.full_name, f.requester_id, f.request_date "
-        "FROM friends f JOIN users u ON u.id = f.requester_id "
-        "WHERE f.addressee_id = ? AND f.status = 'pending'",
-        addressee_id
-    )
-    return render_template("requests.html", requests=requests)
+    requests = db.execute("SELECT u.username, u.country, u.full_name, f.requester_id, f.request_date FROM friends f JOIN users u ON u.id = f.requester_id WHERE f.addressee_id = ? AND f.status = 'pending'", addressee_id)
+    sent_requests = db.execute("SELECT u.username, u.country, u.full_name, f.addressee_id, f.status, f.request_date FROM friends f JOIN users u ON u.id = f.addressee_id WHERE f.requester_id = ? ORDER BY f.request_date DESC", addressee_id)
+    return render_template("requests.html", requests=requests,  sent_requests=sent_requests)
 
 # Accept a friend request
 @app.route("/accept", methods=["POST"])

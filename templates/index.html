@@ -12,8 +12,12 @@
     </div>
     <div class="card-body">
       <h5 class="card-title">Hello there 👋🏼 {{ greet }}</h5>
-      <p class="card-text">You have <b>{{ messages }}</b> messages in your Inbox</p>
+      <p class="card-text">You have <b>{{ in_messages }}</b> messages in your Inbox</p>
       <a href="/inbox" class="btn btn-primary">Check Messages</a>
+    </div>
+    <div class="card-body">
+      <p class="card-text">You have <b>{{ pending_requests }}</b> Friend Requests</p>
+      <a href="/requests" class="btn btn-info">Check Friend Requets</a>
     </div>
   </div>
 {% endblock %}

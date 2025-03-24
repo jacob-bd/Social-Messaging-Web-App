@@ -21,3 +21,16 @@ nav .navbar-brand .green
 {
     color: #2e944b;
 }
+
+/* Rules for sent requests color codes */
+.status-accepted {
+    color: green;
+}
+
+.status-rejected {
+    color: red;
+}
+
+.status-pending {
+    color: rgb(255, 153, 0);
+}

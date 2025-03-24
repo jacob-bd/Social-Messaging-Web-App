@@ -3,7 +3,7 @@
 {% block main %}
     <h3 style="color: white;">Pending Friend Requests</h3>
     <table class="table caption-top">
-        <caption><strong style="color: white;">Incoming Messages</strong></caption>
+        <caption><strong style="color: white;"></strong></caption>
         <thead>
           <tr>
             <th scope="col">#</th>
@@ -36,4 +36,39 @@
           {% endfor %}
         </tbody>
       </table>
+      <br>
+      <h3 style="color: rgb(224, 249, 7);">Sent Friend Requests</h3>
+      <table class="table caption-top">
+          <caption><strong style="color: white;"></strong></caption>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Sent To</th>
+              <th scope="col">Country</th>
+              <th scope="col">Date Sent</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in  sent_requests %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td>{{ request.full_name }}</td>
+              <td>{{ request.country }}</td>
+              <td>{{ request.request_date }}</td>
+              <td>
+                {% if request.status == 'accepted' %}
+                    <b class="status-accepted">{{ request.status | upper }}</b>
+                {% elif request.status == 'rejected' %}
+                    <b class="status-rejected">{{ request.status | upper }}</b>
+                {% elif request.status == 'pending' %}
+                    <b class="status-pending">{{ request.status | upper }}</b>
+                {% else %}
+                    <b>{{ request.status | upper }}</b>
+                {% endif %}
+            </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
 {% endblock %}
