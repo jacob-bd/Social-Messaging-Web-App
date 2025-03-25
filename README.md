@@ -1,6 +1,6 @@
 # Social Messaging
 
-#### Video Demo: [URL to your video demo]
+#### Video Demo: https://youtu.be/ZVxuM-9vcgI 
 
 #### Description:
 Social Messaging is a web-based messaging platform that allows users to connect with friends and exchange messages in a secure environment. Built using Flask and SQLite, this application provides a comprehensive social networking experience with features such as user registration, friend management, and a messaging system.
@@ -127,4 +127,3 @@ While the current version of Social Messaging provides a solid foundation, there
 
 Social Messaging demonstrates the application of web development principles learned throughout CS50. By combining a Flask backend with a SQLite database and a Bootstrap frontend (HTTP, CSS and JavaScript), I've created a functional social platform that allows users to connect and communicate securely. 
 
-I belive this project showcases my skills in user authentication, database design, and web application development while providing a practical, user-friendly experience.
