@@ -41,4 +41,4 @@ __pycache__/
 
 # ignore folders
 /flask_session/
-/TEST_FOLDER/
+TEST_FOLDER/

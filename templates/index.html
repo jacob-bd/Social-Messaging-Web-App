@@ -5,18 +5,22 @@
 {% endblock %}
 
 {% block main %}
-<div class="card text-center">
+<div class="card text-center text-bg-dark">
     <div class="card-header">
       <ul class="nav nav-tabs card-header-tabs">
       </ul>
     </div>
     <div class="card-body">
-      <h5 class="card-title">Hello there 👋🏼 {{ greet }}</h5>
-      <p class="card-text">You have <b>{{ in_messages }}</b> messages in your Inbox</p>
+      <h2 class="card-title">Hello there 👋🏼 {{ greet }}</h2>
+      <h4 class="card-text">You have <b style="color: rgb(1, 252, 1);">{{ in_messages }}</b> messages in your Inbox</h4>
       <a href="/inbox" class="btn btn-primary">Check Messages</a>
     </div>
     <div class="card-body">
-      <p class="card-text">You have <b>{{ pending_requests }}</b> Friend Requests</p>
+      <h4 class="card-text">You have <b style="color: rgb(1, 252, 1);">{{ friends }}</b> Friend</h4>
+      <a href="/friends" class="btn btn-success">Say Hello to your little Friends!</a>
+    </div>
+    <div class="card-body">
+      <h4 class="card-text">You have <b style="color: rgb(1, 252, 1);">{{ pending_requests }}</b> Pending Friend Requests</h4>
       <a href="/requests" class="btn btn-info">Check Friend Requets</a>
     </div>
   </div>

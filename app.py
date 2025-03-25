@@ -73,7 +73,10 @@ def index():
     greet  = db.execute("SELECT full_name FROM users WHERE id = ?", user_id)[0]["full_name"]
     in_messages = db.execute("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND status = 'sent'", user_id)[0]["COUNT(*)"]
     pending_requests = db.execute("SELECT COUNT(*) FROM friends WHERE addressee_id = ? AND status = 'pending'", user_id)[0]["COUNT(*)"]
-    return render_template("index.html", greet=greet, in_messages=in_messages, pending_requests=pending_requests)
+    friends = db.execute("SELECT COUNT(*) FROM friends WHERE requester_id = ? AND status = 'accepted'", user_id)[0]["COUNT(*)"]
+    print("FRIENDS SUM:",friends)
+
+    return render_template("index.html", greet=greet, in_messages=in_messages, pending_requests=pending_requests, friends=friends)
 
 
 @app.route("/friends", methods=["GET", "POST"])
@@ -179,7 +182,7 @@ def requests():
 def check_requests():
     """Check for friend requests"""
     addressee_id = session["user_id"]  # The logged-in user receiving requests
-    requests = db.execute("SELECT u.username, u.country, u.full_name, f.requester_id, f.request_date FROM friends f JOIN users u ON u.id = f.requester_id WHERE f.addressee_id = ? AND f.status = 'pending'", addressee_id)
+    requests = db.execute("SELECT u.username, u.country, u.full_name, f.requester_id, f.request_date FROM friends f JOIN users u ON u.id = f.requester_id WHERE f.addressee_id = ? AND f.status = 'pending' ORDER BY f.request_date DESC", addressee_id)
     sent_requests = db.execute("SELECT u.username, u.country, u.full_name, f.addressee_id, f.status, f.request_date FROM friends f JOIN users u ON u.id = f.addressee_id WHERE f.requester_id = ? ORDER BY f.request_date DESC", addressee_id)
     return render_template("requests.html", requests=requests,  sent_requests=sent_requests)
 
@@ -205,6 +208,17 @@ def reject():
     flash("Friend request rejected!")
     return redirect("/requests")
 
+# Remove a friend connection
+@app.route("/unfriend", methods=["POST"])
+@login_required
+def unfriend():
+    user_id = session["user_id"]
+    requester_id = request.form.get("friend_id")
+    db.execute("UPDATE friends SET status = 'rejected' WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)", user_id,  requester_id,  requester_id, user_id)
+    print("TEST_PRINT:", user_id, requester_id)
+    flash("Friend is not longer your friend 😔!")
+    return redirect("/friends")
+
 ## A page for sending messages to friends
 @app.route("/send", methods=["GET", "POST"])
 @login_required
@@ -224,11 +238,19 @@ def send():
 @login_required
 def delete_message():
     message_id = request.form.get("message_id")
-    print("MESSAGEID:",message_id)
     # Set Message status to trash
     db.execute("UPDATE messages SET status = 'trash'  WHERE id = ?", message_id)
     flash("Message deleted!")
     return redirect("/inbox")
+
+@app.route("/purge", methods=["POST"])
+@login_required
+def purge_message():
+    message_id = request.form.get("message_id")
+    # Set Message status to trash
+    db.execute("DELETE FROM messages WHERE id = ?", message_id)
+    flash("Message Purged from trash!")
+    return redirect("/trash")
     
     
 # Send message to a friend 
@@ -264,10 +286,10 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-@app.route("/history")
+@app.route("/trash")
 @login_required
-def history():
-    """Show messages sent and received by user"""
-    # Collect transaction data for user
-    user_id = session["user_id"]  # User ID for SQL query
-    return render_template("history.html")
+def trash():
+    """show deleted messages"""
+    user_id = session["user_id"]
+    deleted_messages = db.execute("SELECT m.id, m.sender_id, m.content, m.timestamp, u.full_name, m.is_read FROM messages m JOIN users u ON u.id = m.sender_id WHERE (m.receiver_id = ? OR m.sender_id = ?) AND m.status = 'trash' ORDER BY m.timestamp DESC;", user_id, user_id)
+    return render_template("trash.html", deleted_messages=deleted_messages)

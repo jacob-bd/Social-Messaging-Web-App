@@ -2,7 +2,7 @@
 {% block title %}Friend Requests{% endblock %}
 {% block main %}
     <h3 style="color: white;">Pending Friend Requests</h3>
-    <table class="table caption-top">
+    <table class="table table-striped table-dark caption-top">
         <caption><strong style="color: white;"></strong></caption>
         <thead>
           <tr>
@@ -21,7 +21,7 @@
             <td>{{ request.country }}</td>
             <td>{{ request.request_date }}</td>
             <td>
-              <div class="btn-group">
+              <div>
                 <form action="/accept" method="post" style="display:inline;">
                     <input type="hidden" name="requester_id" value="{{ request.requester_id }}">
                     <button class="btn btn-success btn-sm" type="submit">Accept</button>
@@ -38,7 +38,7 @@
       </table>
       <br>
       <h3 style="color: rgb(224, 249, 7);">Sent Friend Requests</h3>
-      <table class="table caption-top">
+      <table class="table table-striped table-dark caption-top">
           <caption><strong style="color: white;"></strong></caption>
           <thead>
             <tr>

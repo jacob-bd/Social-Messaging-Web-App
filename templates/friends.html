@@ -5,14 +5,22 @@
 {% endblock %}
 
 {% block main %}
+<h3 style="color: white;">Your Friends 👇🏽</h3>
 {% for friend in friends %}
-<div class="card text-center">
+<div class="card text-center text-bg-dark">
     <div class="card-body">
       <h5 class="card-title">{{friend.full_name}}</h5>
       <p class="card-text">{{friend.full_name}} is your friend from {{friend.country}}</p>
       <form action="/send" method="post">
       <input type="hidden" name="friend_id" value="{{ friend.id }}">
-      <button class="btn btn-primary" type="submit">Send a Message</button>
+      <button class="btn btn-outline-success btn-lg" type="submit">Send a Message</button>
+    </form>
+    <br>
+    <form action="/unfriend" method="post">
+      <input type="hidden" name="friend_id" value="{{ friend.id }}">
+      <button class="btn btn-outline-danger btn-sm" type="submit">Remove Friend</button>
+    <br>
+  </div>
     </div>
     </form>
   </div>
