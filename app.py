@@ -74,7 +74,6 @@ def index():
     in_messages = db.execute("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND status = 'sent'", user_id)[0]["COUNT(*)"]
     pending_requests = db.execute("SELECT COUNT(*) FROM friends WHERE addressee_id = ? AND status = 'pending'", user_id)[0]["COUNT(*)"]
     friends = db.execute("SELECT COUNT(*) FROM friends WHERE requester_id = ? AND status = 'accepted'", user_id)[0]["COUNT(*)"]
-    print("FRIENDS SUM:",friends)
 
     return render_template("index.html", greet=greet, in_messages=in_messages, pending_requests=pending_requests, friends=friends)
 
@@ -215,7 +214,6 @@ def unfriend():
     user_id = session["user_id"]
     requester_id = request.form.get("friend_id")
     db.execute("UPDATE friends SET status = 'rejected' WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)", user_id,  requester_id,  requester_id, user_id)
-    print("TEST_PRINT:", user_id, requester_id)
     flash("Friend is not longer your friend 😔!")
     return redirect("/friends")
 
